@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo de Kanji - JLPT N4/N5</title>
+    <link rel="stylesheet" href="styles.css">
+<style>
+        body {
+    font-family: Arial, sans-serif;
+    background-color: white;
+    color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    text-align: center;
+}
+
+#kanji {
+    font-size: 100px;
+    margin: 20px 0;
+}
+
+#furigana {
+    font-size: 30px;
+    color: gray;
+    margin: 10px 0;
+}
+
+.kanji-image {
+    max-width: 200px;
+    margin-top: 20px;
+    transition: transform 0.3s ease;
+}
+
+.options button {
+    background-color: white;
+    color: black;
+    border: 2px solid red;
+    margin: 10px;
+    padding: 10px 20px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.options button:hover {
+    background-color: red;
+    color: white;
+    transform: scale(1.1);
+}
+
+#score {
+    font-size: 20px;
+    margin-top: 20px;
+}
+
+/* Animações para os acertos e erros */
+.correct {
+    background-color: green;
+    color: white;
+    animation: correctAnimation 0.5s forwards;
+}
+
+.error {
+    background-color: red;
+    color: white;
+    animation: errorAnimation 0.5s forwards;
+}
+
+@keyframes correctAnimation {
+    0% { background-color: green; }
+    100% { background-color: lightgreen; }
+}
+
+@keyframes errorAnimation {
+    0% { background-color: red; }
+    100% { background-color: lightcoral; }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Tela de Jogo -->
+        <div id="game-screen" class="screen">
+            <h2 id="kanji">日</h2>
+            <div id="furigana">にち</div>
+            <!-- Exibindo a imagem do significado -->            
+            <div class="options">
+                <button class="option" onclick="checkAnswer(0)">Sol</button>
+                <button class="option" onclick="checkAnswer(1)">Dia</button>
+                <button class="option" onclick="checkAnswer(2)">Lua</button>
+            </div>
+            <div id="score">Pontuação: 0</div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+
+<script>
+    let score = 0;
+let kanjiList = [
+    { kanji: '日', furigana: 'にち', meaning: 'Dia', options: ['Sol', 'Dia', 'Lua'], correct: 1},
+    { kanji: '木', furigana: 'き', meaning: 'Árvore', options: ['Madeira', 'Árvore', 'Flor'], correct: 1},
+    { kanji: '山', furigana: 'やま', meaning: 'Montanha', options: ['Montanha', 'Colina', 'Mar'], correct: 0 },
+    { kanji: '月', furigana: 'つき', meaning: 'Lua', options: ['Sol', 'Lua', 'Estrela'], correct: 1 },
+    { kanji: '田', furigana: 'た', meaning: 'Arrozal', options: ['Rio', 'Campo', 'Arrozal'], correct: 2 },
+    { kanji: '女', furigana: 'おんな', meaning: 'Mulher', options: ['Homem', 'Filho', 'Mulher'], correct: 2 },
+    { kanji: '男', furigana: 'おとこ', meaning: 'Homem', options: ['Mulher', 'Pai', 'Homem'], correct: 2 },
+    { kanji: '子', furigana: 'こ', meaning: 'Criança', options: ['Pai', 'Criança', 'Amigo'], correct: 1 },
+    { kanji: '学', furigana: 'がく', meaning: 'Estudo', options: ['Trabalho', 'Escola', 'Estudo'], correct: 2 },
+    { kanji: '先', furigana: 'せん', meaning: 'Anterior', options: ['Próximo', 'Velho', 'Anterior'], correct: 2 },
+    { kanji: '生', furigana: 'せい', meaning: 'Vida', options: ['Morte', 'Vida', 'Nascimento'], correct: 1 },
+    { kanji: '校', furigana: 'こう', meaning: 'Escola', options: ['Trabalho', 'Parque', 'Escola'], correct: 2 },
+    { kanji: '友', furigana: 'とも', meaning: 'Amigo', options: ['Inimigo', 'Irmão', 'Amigo'], correct: 2 },
+    { kanji: '本', furigana: 'ほん', meaning: 'Livro', options: ['Livro', 'Mesa', 'Árvore'], correct: 0 },
+    { kanji: '川', furigana: 'かわ', meaning: 'Rio', options: ['Rio', 'Mar', 'Montanha'], correct: 0 },
+    { kanji: '空', furigana: 'そら', meaning: 'Céu', options: ['Chuva', 'Céu', 'Neve'], correct: 1 },
+    { kanji: '雨', furigana: 'あめ', meaning: 'Chuva', options: ['Neve', 'Gelo', 'Chuva'], correct: 2 },
+    { kanji: '車', furigana: 'くるま', meaning: 'Carro', options: ['Carro', 'Trem', 'Avião'], correct: 0 },
+    { kanji: '電', furigana: 'でん', meaning: 'Eletricidade', options: ['Luz', 'Som', 'Eletricidade'], correct: 2 },
+    { kanji: '語', furigana: 'ご', meaning: 'Idioma', options: ['País', 'Idioma', 'Escrita'], correct: 1 },
+    { kanji: '話', furigana: 'はなし', meaning: 'Conversa', options: ['Leitura', 'Escrita', 'Conversa'], correct: 2 },
+    { kanji: '読', furigana: 'よむ', meaning: 'Ler', options: ['Escrever', 'Ler', 'Falar'], correct: 1 },
+    { kanji: '書', furigana: 'かく', meaning: 'Escrever', options: ['Ler', 'Escrever', 'Ouvir'], correct: 1 },
+    { kanji: '聞', furigana: 'きく', meaning: 'Ouvir', options: ['Ouvir', 'Falar', 'Ver'], correct: 0 },
+    { kanji: '食', furigana: 'たべる', meaning: 'Comer', options: ['Beber', 'Dormir', 'Comer'], correct: 2 },
+    { kanji: '飲', furigana: 'のむ', meaning: 'Beber', options: ['Beber', 'Comer', 'Correr'], correct: 0 },
+    { kanji: '行', furigana: 'いく', meaning: 'Ir', options: ['Voltar', 'Ir', 'Vir'], correct: 1 },
+    { kanji: '来', furigana: 'くる', meaning: 'Vir', options: ['Vir', 'Ir', 'Ficar'], correct: 0 },
+    { kanji: '見', furigana: 'みる', meaning: 'Ver', options: ['Ver', 'Ouvir', 'Sentir'], correct: 0 },
+    { kanji: '立', furigana: 'たつ', meaning: 'Levantar-se', options: ['Sentar-se', 'Deitar-se', 'Levantar-se'], correct: 2 },
+    { kanji: '休', furigana: 'やすむ', meaning: 'Descansar', options: ['Trabalhar', 'Dormir', 'Descansar'], correct: 2 },
+    { kanji: '名', furigana: 'な', meaning: 'Nome', options: ['Pessoa', 'Nome', 'Objeto'], correct: 1 },
+    { kanji: '年', furigana: 'とし', meaning: 'Ano', options: ['Tempo', 'Semana', 'Ano'], correct: 2 },
+    { kanji: '時', furigana: 'とき', meaning: 'Tempo', options: ['Relógio', 'Hora', 'Tempo'], correct: 2 },
+    { kanji: '間', furigana: 'あいだ', meaning: 'Entre', options: ['Fora', 'Depois', 'Entre'], correct: 2 },
+    { kanji: '高', furigana: 'たかい', meaning: 'Alto / Caro', options: ['Baixo', 'Alto', 'Curto'], correct: 1 },
+    { kanji: '安', furigana: 'やすい', meaning: 'Barato', options: ['Fraco', 'Rápido', 'Barato'], correct: 2 },
+    { kanji: '多', furigana: 'おおい', meaning: 'Muitos', options: ['Poucos', 'Muitos', 'Vários'], correct: 1 },
+    { kanji: '少', furigana: 'すくない', meaning: 'Poucos', options: ['Nenhum', 'Poucos', 'Muitos'], correct: 1 },
+    { kanji: '早', furigana: 'はやい', meaning: 'Cedo', options: ['Tarde', 'Agora', 'Cedo'], correct: 2 },
+    { kanji: '新', furigana: 'あたらしい', meaning: 'Novo', options: ['Velho', 'Novo', 'Útil'], correct: 1 },
+    { kanji: '古', furigana: 'ふるい', meaning: 'Velho', options: ['Velho', 'Novo', 'Feio'], correct: 0 }
+];
+    
+
+
+let currentKanjiIndex = 0;
+
+function loadKanji() {
+    let currentKanji = kanjiList[currentKanjiIndex];
+    
+    // Exibe o kanji e seu furigana
+    document.getElementById('kanji').textContent = currentKanji.kanji;
+    document.getElementById('furigana').textContent = currentKanji.furigana;
+    
+    // Exibe a imagem correspondente
+   
+    
+    // Atualiza as opções
+    let buttons = document.querySelectorAll('.option');
+    buttons.forEach((button, index) => {
+        button.textContent = currentKanji.options[index];
+        button.classList.remove('correct', 'error');  // Remove as classes de animação
+    });
+}
+
+function checkAnswer(selected) {
+    let currentKanji = kanjiList[currentKanjiIndex];
+    
+    // Verifica se a resposta está correta
+    if (selected === currentKanji.correct) {
+        score += 10;  // Acerto
+        updateFeedback('correct');
+    } else {
+        updateFeedback('error');
+    }
+    
+    // Atualiza a pontuação
+    document.getElementById('score').textContent = 'Pontuação: ' + score;
+
+    // Avança para o próximo kanji
+    currentKanjiIndex = (currentKanjiIndex + 1) % kanjiList.length;
+    setTimeout(loadKanji, 1000);  // Carrega o próximo kanji após 1 segundo
+}
+
+function updateFeedback(status) {
+    let buttons = document.querySelectorAll('.option');
+    buttons.forEach(button => {
+        if (status === 'correct') {
+            button.classList.add('correct');
+        } else {
+            button.classList.add('error');
+        }
+    });
+}
+
+loadKanji();  // Carrega o primeiro kanji ao iniciar o jogo
+</script>
+</html>
